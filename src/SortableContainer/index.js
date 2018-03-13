@@ -522,7 +522,7 @@ export default function sortableContainer(WrappedComponent, config = {withRef: f
       } else {
         return {
           x: e.pageX,
-          x: e.pageY,
+          y: e.pageY,
         };
       }
     }
