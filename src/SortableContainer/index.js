@@ -379,13 +379,33 @@ export default function sortableContainer(WrappedComponent, config = {withRef: f
       }
     };
 
+    _handleSortMove = event => {
+      this.animateNodes();
+      this.autoscroll();
+
+      if (window.requestAnimationFrame)
+        this.sortMoveAF = null;
+      else setTimeout(() =>{
+        this.sortMoveAF = null;
+      }, 1000/60); // aim for 60 fps
+    };
+
     handleSortMove = event => {
       const {onSortMove} = this.props;
       event.preventDefault(); // Prevent scrolling on mobile
 
+      if (this.sortMoveAF) {
+        return;
+      }
+
       this.updatePosition(event);
-      this.animateNodes();
-      this.autoscroll();
+
+      if (window.requestAnimationFrame) {
+        this.sortMoveAF = window.requestAnimationFrame(this._handleSortMove);
+      } else {
+        this.sortMoveAF = true;
+        this._handleSortMove(); // call inner function now if no animation frame
+      }
 
       if (onSortMove) {
         onSortMove(event);
@@ -395,6 +415,12 @@ export default function sortableContainer(WrappedComponent, config = {withRef: f
     handleSortEnd = event => {
       const {hideSortableGhost, transitionDuration, onSortEnd} = this.props;
       const {collection} = this.manager.active;
+
+      // Remove the move handler if there's a frame that hasn't run yet.
+      if (window.cancelAnimationFrame && this.sortMoveAF){
+        window.cancelAnimationFrame(this.sortMoveAF);
+        this.sortMoveAF = null;
+      }
 
       // Remove the event listeners if the node is still in the DOM
       if (this.listenerNode) {
@@ -476,7 +502,6 @@ export default function sortableContainer(WrappedComponent, config = {withRef: f
 
         node.node.style.zIndex = '';
         if (node.node === this.sortableGhost) {
-          console.log(node.node)
           return; // For the ghost node, we'll do it when we remove the helper
         }
         node.node.style[`${vendorPrefix}Transform`] = '';
