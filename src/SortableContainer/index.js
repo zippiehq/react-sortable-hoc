@@ -600,7 +600,7 @@ export default function sortableContainer(WrappedComponent, config = {withRef: f
       };
 
       const ghostOffset = nodes[this.index].edgeOffset ||
-                (nodes[this.index].edgeOffset = getEdgeOffset(nodes[this.index].node));
+                (nodes[this.index].edgeOffset = getEdgeOffset(nodes[this.index].node, this.container));
 
       const ghostTranslate = {
         x: 0,
