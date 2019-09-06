@@ -21,6 +21,7 @@ import {
   omit,
   provideDisplayName,
   setInlineStyles,
+  setTransition,
   setTransitionDuration,
   setTranslate3d,
   getTargetIndex,
@@ -296,7 +297,6 @@ export default function sortableContainer(
           left: this.scrollContainer.scrollLeft,
           top: this.scrollContainer.scrollTop,
         };
-
         this.initialWindowScroll = {
           left: window.pageXOffset,
           top: window.pageYOffset,
@@ -452,13 +452,14 @@ export default function sortableContainer(
       }
     };
 
-    handleSortEnd = (event) => {
-      const {hideSortableGhost, onSortEnd} = this.props;
+    handleSortEnd = async (event) => {
+      const {hideSortableGhost, onSortEnd, dropAnimationDuration} = this.props;
       const {
         active: {collection},
         isKeySorting,
       } = this.manager;
-      const nodes = this.manager.refs[collection];
+      // const nodes = this.manager.refs[collection];
+      const nodes = this.manager.getRefs();
 
       // Remove the event listeners if the node is still in the DOM
       if (this.listenerNode) {
@@ -488,6 +489,10 @@ export default function sortableContainer(
             ),
           );
         }
+      }
+
+      if (dropAnimationDuration) {
+        await this.dropAnimation();
       }
 
       // Remove the helper from the DOM
@@ -820,6 +825,44 @@ export default function sortableContainer(
           isKeySorting,
         });
       }
+    }
+
+    dropAnimation() {
+      return new Promise((resolve) => {
+        const {dropAnimationDuration, dropAnimationEasing} = this.props;
+        const {containerScrollDelta, windowScrollDelta} = this;
+        const oldOffset = this.offsetEdge;
+        const {edgeOffset: newOffset, node: newNode} = this.manager.nodeAtIndex(
+          this.newIndex,
+        );
+        const deltaX =
+          this.newIndex > this.index
+            ? newOffset.left - this.width + newNode.offsetWidth - oldOffset.left
+            : newOffset.left - oldOffset.left;
+        const deltaY =
+          this.newIndex > this.index
+            ? newOffset.top - this.height + newNode.offsetHeight - oldOffset.top
+            : newOffset.top - oldOffset.top;
+
+        setTranslate3d(this.helper, {
+          x: deltaX - containerScrollDelta.left - windowScrollDelta.left,
+          y: deltaY - containerScrollDelta.top - windowScrollDelta.top,
+        });
+        setTransition(
+          this.helper,
+          `transform ${dropAnimationDuration}ms ${dropAnimationEasing}`,
+        );
+
+        this.helper.addEventListener('transitionend', (event) => {
+          // We only want to know when the transform transition ends, there
+          // could be other animated properties, such as opacity
+          if (event.propertyName !== 'transform') {
+            return;
+          }
+
+          resolve();
+        });
+      });
     }
 
     autoscroll = () => {

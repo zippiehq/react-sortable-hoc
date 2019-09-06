@@ -55,6 +55,8 @@ export interface Dimensions {
 
 export interface SortableContainerProps {
   axis?: Axis;
+  dropAnimationDuration?: number;
+  dropAnimationEasing?: string;
   lockAxis?: Axis;
   helperClass?: string;
   transitionDuration?: number;
@@ -65,7 +67,7 @@ export interface SortableContainerProps {
     cancel?: number[];
     up?: number[];
     down?: number[];
-  },
+  };
   pressDelay?: number;
   pressThreshold?: number;
   distance?: number;
