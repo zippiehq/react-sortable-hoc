@@ -261,7 +261,7 @@ export default function sortableContainer(
         // Need to get the latest value for `index` in case it changes during `updateBeforeSortStart`
         const {index} = node.sortableInfo;
         const margin = getElementMargin(node);
-        const containerBoundingRect = this.scrollContainer.getBoundingClientRect();
+        const containerBoundingRect = this.container.getBoundingClientRect();
         const dimensions = getHelperDimensions({collection, index, node});
 
         this.node = node;
